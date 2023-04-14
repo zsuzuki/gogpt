@@ -7,13 +7,32 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"time"
 )
 
 type requestData struct {
 	Prompt string `json:"prompt"`
-	Num int `json:"n"`
-	Size string `json:"size"`
 	// 他のオプションやパラメータを設定
+}
+
+func downloadImage(url string, filename string) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	imgData, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile(filename, imgData, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func main() {
@@ -36,8 +55,6 @@ func main() {
 
 	data := requestData{
 		Prompt: prompt,
-		Num: 2,
-		Size: "1024x1024",
 	}
 
 	jsonData, err := json.Marshal(data)
@@ -74,7 +91,20 @@ func main() {
 		return
 	}
 
-	generatedImage := result["data"]
-	fmt.Println("生成された画像：", generatedImage)
-}
+	generatedImages := result["data"].([]interface{})
+	for i, img := range generatedImages {
+		generatedImageURL := img.(map[string]interface{})["url"].(string)
+		fmt.Printf("生成された画像 %d のURL：%s\n", i+1, generatedImageURL)
 
+		dateStr := time.Now().Format("2006-01-02-15-04")
+		filename := fmt.Sprintf("image-%s-%d.png", dateStr, i+1)
+
+		err = downloadImage(generatedImageURL, filename)
+		if err != nil {
+			fmt.Printf("画像 %d のダウンロードに失敗しました。%v\n", i+1, err)
+			continue
+		}
+
+		fmt.Printf("画像 %d がダウンロードされ、ファイル名 %s で保存されました。\n", i+1, filename)
+	}
+}
