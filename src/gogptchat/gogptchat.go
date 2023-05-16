@@ -40,8 +40,9 @@ func main() {
 	text := os.Args[1] // 引数で与えられたテキスト
 	messages := []Message{
 		{
-			Role:    "system",
-			Content: "You are ChatGPT, a large language model trained by OpenAI, based on the GPT-4 architecture.",
+			Role: "system",
+			// Content: "You are ChatGPT, a large language model trained by OpenAI, based on the GPT-4 architecture.",
+			Content: "あなたはGPT-4アーキテクチャに基づきOpenAIが学習させた大規模言語モデルChatGPTです。",
 		},
 		{
 			Role:    "user",
